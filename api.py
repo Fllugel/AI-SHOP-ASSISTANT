@@ -10,7 +10,7 @@ app = FastAPI()
 # Enable CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "https://localhost:3000"],
+    allow_origins=["http://localhost:3000", "https://localhost:3000"], #TODO: Fix api: HOW TO HANDLE HTTPS?
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -20,7 +20,7 @@ class ChatRequest(BaseModel):
     user_id: str
     input: str
 
-@app.post("/chat")
+@app.post("/chat") #TODO: Fix api: Api py and chat uses repeat code
 async def chat(request: ChatRequest, background_tasks: BackgroundTasks):
     user_id = request.user_id
     if user_id not in chat_histories:
@@ -51,7 +51,7 @@ async def chat(request: ChatRequest, background_tasks: BackgroundTasks):
 
     return {"response": response_message}
 
-@app.post("/clear_history")
+@app.post("/clear_history") #TODO: Fix api: Decide is this nececery and how to handle multiple users history
 async def clear_history(request: ChatRequest, background_tasks: BackgroundTasks):
     user_id = request.user_id
     if user_id in chat_histories:

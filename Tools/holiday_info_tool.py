@@ -8,6 +8,8 @@ from sklearn.metrics.pairwise import cosine_similarity
 from langchain_openai import OpenAIEmbeddings
 from langchain_core.tools import tool
 
+#TODO Rewrite using vector DB
+
 # Set your OpenAI API key.
 openai.api_key = os.getenv("GPT_API_KEY")
 

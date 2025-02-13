@@ -5,22 +5,18 @@ from langchain_community.vectorstores import FAISS
 from langchain_openai import OpenAIEmbeddings
 from langchain.docstore.document import Document
 
-# Шляхи до файлу з інформацією та директорії для збереження індексу
+#TODO Перевір чи оновляється бд при оновлені файлу
+
 DATA_FILE = "Data/shop_info.txt"
 INDEX_DIR = "Data/faiss_index"
 
 load_dotenv(dotenv_path=".env")
 
-# Отримання ключа API для OpenAI
 OPENAI_API_KEY = os.getenv("GPT_API_KEY")
 embeddings = OpenAIEmbeddings(openai_api_key=OPENAI_API_KEY)
 
 
 def load_documents_from_file(filepath: str):
-    """
-    Завантажує дані з текстового файлу та повертає список Document.
-    Кожен абзац (розділений пустим рядком) буде сприйматися як окремий документ.
-    """
     with open(filepath, "r", encoding="utf-8") as f:
         text = f.read()
     # Розбиваємо текст на абзаци за допомогою подвійного переносу рядка
@@ -43,13 +39,6 @@ else:
 
 @tool("avrora_info_tool")
 def avrora_info_tool() -> str:
-    """
-    Інструмент повертає всю інформацію про компанію "Аврора".
-    Дані завантажуються із векторного сховища, побудованого із текстового файлу.
-
-    Повертає:
-        Один рядок тексту, який є конкатенацією всіх абзаців з файлу.
-    """
     # Виконуємо пошук за пустим запитом, щоб отримати всі документи.
     results = vectorstore.similarity_search("", k=100)
     if results:
