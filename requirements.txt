@@ -1,0 +1,14 @@
+langchain
+langchain_community
+python-dotenv
+langchain-openai
+langgraph
+langchain-core
+langchain_cohere
+fastapi
+datetime
+asyncio
+uvicorn
+ipython
+gradio
+PyYAML
