@@ -12,3 +12,4 @@ uvicorn
 ipython
 gradio
 PyYAML
+faiss-cpu
