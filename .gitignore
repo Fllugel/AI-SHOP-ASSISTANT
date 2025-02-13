@@ -1,0 +1,6 @@
+.env
+.venv/
+.idea/
+/Data/*
+!/Data/
+graph_image.png
