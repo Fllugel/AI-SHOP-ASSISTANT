@@ -7,11 +7,13 @@ from langchain.docstore.document import Document
 
 #TODO Перевір чи оновляється бд при оновлені файлу
 
+# Шляхи до файлу з інформацією та директорії для збереження індексу
 DATA_FILE = "Data/shop_info.txt"
 INDEX_DIR = "Data/faiss_index"
 
 load_dotenv(dotenv_path=".env")
 
+# Отримання ключа API для OpenAI
 OPENAI_API_KEY = os.getenv("GPT_API_KEY")
 embeddings = OpenAIEmbeddings(openai_api_key=OPENAI_API_KEY)
 
@@ -39,6 +41,9 @@ else:
 
 @tool("avrora_info_tool")
 def avrora_info_tool() -> str:
+    """
+    The tool returns all information about the store and company.
+    """
     # Виконуємо пошук за пустим запитом, щоб отримати всі документи.
     results = vectorstore.similarity_search("", k=100)
     if results:
