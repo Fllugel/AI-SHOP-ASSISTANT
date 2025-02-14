@@ -10,7 +10,7 @@ from langchain_openai import OpenAIEmbeddings
 # Шляхи до YAML-файлу з інформацією, директорії для збереження індексу
 # та файлу для збереження хешів у форматі YAML.
 DATA_FILE = "Data/shop_info.yaml"
-INDEX_DIR = "Data/faiss_index"
+INDEX_DIR = "Data/faiss_shop_info_index"
 hash_yaml_path = os.path.join(INDEX_DIR, "file_hashes.yaml")
 
 load_dotenv(dotenv_path=".env")
