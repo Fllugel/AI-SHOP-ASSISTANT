@@ -1,91 +1,86 @@
 import os
-import pickle
-import hashlib
 import yaml
+import hashlib
 from dotenv import load_dotenv
 from langchain_core.tools import tool
+from langchain.docstore.document import Document
 from langchain_community.vectorstores import FAISS
 from langchain_openai import OpenAIEmbeddings
-from langchain.docstore.document import Document
 
-# Шляхи до YAML-файлу з інформацією, директорії для збереження індексу та файлу з кешем хешу
+# Шляхи до YAML-файлу з інформацією, директорії для збереження індексу
+# та файлу для збереження хешів у форматі YAML.
 DATA_FILE = "Data/shop_info.yaml"
 INDEX_DIR = "Data/faiss_index"
-HASH_CACHE_FILE = "Data/shop_info_hash_cache.pkl"
+hash_yaml_path = os.path.join(INDEX_DIR, "file_hashes.yaml")
 
 load_dotenv(dotenv_path=".env")
 
-# Отримання ключа API для OpenAI
-OPENAI_API_KEY = os.getenv("GPT_API_KEY")
-embeddings = OpenAIEmbeddings(openai_api_key=OPENAI_API_KEY)
-
-
-def load_documents_from_yaml(filepath: str):
-    """
-    Завантажує дані з YAML-файлу та повертає список Document.
-    Кожен ключ у YAML-файлі стає окремим документом із заголовком та вмістом.
-    """
-    with open(filepath, "r", encoding="utf-8") as f:
-        data = yaml.safe_load(f)
-
-    documents = []
-    for section, content in data.items():
-        if isinstance(content, list):
-            # Якщо вміст представлено списком (наприклад, для "Цінності")
-            content = "\n".join(content)
-        combined_content = f"**{section}**\n{content}"
-        documents.append(Document(page_content=combined_content, metadata={"section": section}))
-    return documents
-
-
 def compute_file_hash(file_path, algorithm='md5'):
-    """
-    Обчислює хеш файлу за допомогою вказаного алгоритму.
-    """
+    """Обчислює хеш файлу для визначення змін."""
     hash_algo = hashlib.new(algorithm)
     with open(file_path, 'rb') as f:
         for chunk in iter(lambda: f.read(4096), b''):
             hash_algo.update(chunk)
     return hash_algo.hexdigest()
 
+# Обчислюємо поточний хеш YAML-файлу з даними.
+current_yaml_hash = compute_file_hash(DATA_FILE)
 
-# Обчислення поточного хешу YAML-файлу
-current_data_hash = compute_file_hash(DATA_FILE)
-
-# Перевірка кешованого хешу
-index_up_to_date = False
-if os.path.exists(HASH_CACHE_FILE):
-    try:
-        with open(HASH_CACHE_FILE, 'rb') as f:
-            cached_hash = pickle.load(f)
-        if cached_hash == current_data_hash:
-            index_up_to_date = True
-        else:
-            print("YAML file changed. Recomputing embeddings...")
-    except Exception as e:
-        print("Помилка завантаження кешу хешу:", e)
-
-# Якщо кеш актуальний та індекс існує – завантажуємо його, інакше – створюємо новий індекс
-if index_up_to_date and os.path.exists(INDEX_DIR):
-    vectorstore = FAISS.load_local(INDEX_DIR, embeddings, allow_dangerous_deserialization=True)
+# Завантажуємо дані з файлу хешів, якщо він існує; інакше – ініціалізуємо порожній словник.
+if os.path.exists(hash_yaml_path):
+    with open(hash_yaml_path, 'r', encoding='utf-8') as f:
+        hash_data = yaml.safe_load(f) or {}
 else:
-    if os.path.exists(DATA_FILE):
-        docs = load_documents_from_yaml(DATA_FILE)
-    else:
-        raise FileNotFoundError(f"Не знайдено файл даних: {DATA_FILE}")
-    print("Computing info embeddings...")
-    vectorstore = FAISS.from_documents(docs, embeddings)
-    vectorstore.save_local(INDEX_DIR)
-    # Оновлюємо кеш хешу файлу даних
-    with open(HASH_CACHE_FILE, 'wb') as f:
-        pickle.dump(current_data_hash, f)
+    hash_data = {}
 
+# Використовуємо ім'я YAML-файлу як ключ у словнику з хешами.
+yaml_key = os.path.basename(DATA_FILE)
+stored_hash = hash_data.get(yaml_key)
+
+# Визначаємо, чи потрібно перебудовувати FAISS-індекс.
+rebuild_index = (stored_hash != current_yaml_hash)
+
+# Ініціалізуємо embeddings.
+OPENAI_API_KEY = os.getenv("GPT_API_KEY")
+embeddings = OpenAIEmbeddings(openai_api_key=OPENAI_API_KEY)
+
+if not rebuild_index and os.path.exists(INDEX_DIR):
+    # Завантажуємо FAISS-індекс з диску.
+    vectorstore = FAISS.load_local(INDEX_DIR, embeddings, allow_dangerous_deserialization=True)
+    print("Loaded FAISS index from disk.")
+else:
+    # Завантажуємо дані з YAML-файлу.
+    with open(DATA_FILE, 'r', encoding='utf-8') as file:
+        shop_data = yaml.safe_load(file)
+
+    # Створюємо об'єкти Document для кожного розділу.
+    documents = []
+    for section, content in shop_data.items():
+        # Якщо вміст представлено списком (наприклад, для "Цінності"), об'єднуємо елементи.
+        if isinstance(content, list):
+            content_text = "\n".join(content)
+        else:
+            content_text = str(content)
+        doc_content = f"**{section}**\n{content_text}"
+        doc = Document(page_content=doc_content, metadata={"section": section})
+        documents.append(doc)
+
+    print("Creating FAISS index for shop information...")
+    vectorstore = FAISS.from_documents(documents, embeddings)
+    vectorstore.save_local(INDEX_DIR)
+
+    # Створюємо директорію для індексу, якщо її немає, та оновлюємо хеш у YAML-файлі.
+    os.makedirs(INDEX_DIR, exist_ok=True)
+    hash_data[yaml_key] = current_yaml_hash
+    with open(hash_yaml_path, 'w', encoding='utf-8') as f:
+        yaml.safe_dump(hash_data, f)
+    print("FAISS index created and saved.")
 
 @tool("shop_info_tool")
 def shop_info_tool() -> str:
     """
     Інструмент повертає всю інформацію про компанію "Аврора".
-    Дані завантажуються із векторного сховища, побудованого з YAML-файлу.
+    Дані завантажуються із FAISS-індексу, побудованого з YAML-файлу.
     """
     results = vectorstore.similarity_search("", k=100)
     if results:
