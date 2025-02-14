@@ -3,7 +3,6 @@ import random
 import string
 from chat import process_message
 
-
 def handle_chat(user_input, chat_history, user_id):
     if not user_id:
         user_id = ''.join(random.choices(string.ascii_letters + string.digits, k=8))
