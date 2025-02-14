@@ -4,7 +4,6 @@ from langchain_core.prompts import PromptTemplate
 from langchain_core.tools import tool
 from langchain_openai import ChatOpenAI
 from langchain_community.utilities import SQLDatabase
-from langchain import hub
 from typing_extensions import Annotated, TypedDict
 from langchain_community.tools.sql_database.tool import QuerySQLDatabaseTool
 

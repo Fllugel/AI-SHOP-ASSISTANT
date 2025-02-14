@@ -13,3 +13,5 @@ ipython
 gradio
 PyYAML
 faiss-cpu
+pydantic
+langsmith
