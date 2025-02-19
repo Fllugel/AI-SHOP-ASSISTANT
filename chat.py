@@ -1,35 +1,69 @@
-from datetime import datetime, timezone
+from langchain_core.messages import HumanMessage, AIMessage
+from graph import graph
 
-from Agent.main_agent import main_agent_prompt
-from config import MAX_MESSAGES_IN_SHORT_TERM_MEMORY
-from graph import graph_builder
+# Глобальний словник для зберігання стану кожного користувача
+user_states = {}
 
-# Compile the graph
-runnable = graph_builder.compile()
 
-# Chat history storage
-chat_histories = {}
-last_activity = {}
+def get_user_state(user_id: str) -> dict:
+    """
+    Повертає стан для користувача з user_id. Якщо стану немає, ініціалізуємо його.
+    """
+    if user_id not in user_states:
+        user_states[user_id] = {
+            "chat_history": [],
+            "intermediate_steps": [],
+            "input": ""
+        }
+    return user_states[user_id]
 
-def process_message(user_id: str, user_input: str) -> str:
-    if user_id not in chat_histories:
-        chat_histories[user_id] = []
-        last_activity[user_id] = datetime.now(timezone.utc)
 
-    chat_histories[user_id].append({"role": "user", "content": user_input})
+def extract_final_answer(state: dict) -> str:
+    """
+    Пошук останньої відповіді final_answer у intermediate_steps.
+    """
+    for step in reversed(state.get("intermediate_steps", [])):
+        if step.tool == "final_answer":
+            return step.tool_input.get("answer", "No answer found")
+    return "I don't have a response for that."
 
-    input_format = {
-        "history": chat_histories[user_id],
-        "input": user_input
-    }
 
-    response = runnable.invoke({"messages": main_agent_prompt.format_messages(**input_format)})
-    response_message = response["messages"][-1].content
+def run_user_query(user_id: str, user_input: str) -> str:
+    """
+    Обробляє запит користувача з урахуванням його унікального id.
+    """
+    # Отримуємо або ініціалізуємо стан для даного користувача
+    state = get_user_state(user_id)
 
-    chat_histories[user_id].append({"role": "assistant", "content": response_message})
-    last_activity[user_id] = datetime.now(timezone.utc)
+    # Додаємо запит користувача до стану
+    state["input"] = user_input
 
-    if len(chat_histories[user_id]) > MAX_MESSAGES_IN_SHORT_TERM_MEMORY * 2:
-        chat_histories[user_id] = chat_histories[user_id][-MAX_MESSAGES_IN_SHORT_TERM_MEMORY * 2:]
+    # Компіляція та виклик графа з поточним станом
+    compiled_graph = graph.compile()
+    state = compiled_graph.invoke(state)
 
-    return response_message
+    # Отримуємо відповідь від системи
+    response = extract_final_answer(state)
+
+    # Оновлюємо історію чату користувача
+    state["chat_history"].append(HumanMessage(content=user_input))
+    state["chat_history"].append(AIMessage(content=response))
+
+    # Очищаємо "input" та накопичені кроки для наступного запиту
+    state["input"] = ""
+    state["intermediate_steps"] = []
+
+    # Зберігаємо оновлений стан користувача
+    user_states[user_id] = state
+
+    return response
+
+
+# Для тестування з консолі
+if __name__ == "__main__":
+    test_user_id = "test_user"
+    print("Ласкаво просимо до чату. Напишіть ваше повідомлення.")
+    while True:
+        inp = input("User: ")
+        reply = run_user_query(test_user_id, inp)
+        print("Assistant:", reply)

@@ -1,7 +1,7 @@
 from fastapi import FastAPI, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from chat import process_message, chat_histories
+from chat import run_user_query, user_states
 
 app = FastAPI()
 
@@ -23,12 +23,12 @@ class ClearHistoryRequest(BaseModel):
 
 @app.post("/chat")
 async def chat(request: ChatRequest, background_tasks: BackgroundTasks):
-    response_message = process_message(request.user_id, request.input)
+    response_message = run_user_query(request.user_id, request.input)
     return {"response": response_message}
 
 @app.post("/clear_history")
 async def clear_history(request: ClearHistoryRequest, background_tasks: BackgroundTasks):
     user_id = request.user_id
-    if user_id in chat_histories:
-        chat_histories[user_id] = []
+    if user_id in user_states:
+        user_states[user_id]["chat_history"] = []
     return {"message": "Chat history cleared."}

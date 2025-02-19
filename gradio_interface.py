@@ -1,13 +1,13 @@
 import gradio as gr
 import random
 import string
-from chat import process_message
+from chat import run_user_query
 
 def handle_chat(user_input, chat_history, user_id):
     if not user_id:
         user_id = ''.join(random.choices(string.ascii_letters + string.digits, k=8))
 
-    response = process_message(user_id, user_input)
+    response = run_user_query(user_id, user_input)
 
     chat_history.append({"role": "user", "content": user_input})
     chat_history.append({"role": "assistant", "content": response})

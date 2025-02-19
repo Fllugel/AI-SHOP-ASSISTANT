@@ -2,7 +2,6 @@ import os
 import yaml
 import hashlib
 from dotenv import load_dotenv
-from langchain_core.tools import tool
 from langchain.docstore.document import Document
 from langchain_community.vectorstores import FAISS
 from langchain_openai import OpenAIEmbeddings
@@ -73,8 +72,7 @@ else:
         yaml.safe_dump(hash_data, f)
     print("FAISS index created and saved.")
 
-@tool("shop_info_tool")
-def shop_info_tool() -> str:
+def shop_info() -> str:
     """
     Tool returns all information about the company.
     """

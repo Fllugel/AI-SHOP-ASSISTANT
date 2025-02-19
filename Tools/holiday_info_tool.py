@@ -3,7 +3,6 @@ import openai
 import yaml
 import hashlib
 from langchain_openai import OpenAIEmbeddings
-from langchain_core.tools import tool
 from langchain.docstore.document import Document
 from langchain_community.vectorstores import FAISS
 
@@ -77,13 +76,7 @@ else:
     print("FAISS index created and saved.")
 
 
-@tool("holiday_info_tool")
-def holiday_info_tool(key: str) -> str:
-    """
-    This tool returns a list of gift categories suitable for the holiday
-    that best matches the input key.
-    """
-    # Query the FAISS index for the most similar document.
+def holiday_info(key: str) -> str:
     results = vectorstore.similarity_search(key, k=1)
     if results:
         best_match = results[0]

@@ -1,7 +1,6 @@
 import os
 from dotenv import load_dotenv
 from langchain_core.prompts import PromptTemplate
-from langchain_core.tools import tool
 from langchain_openai import ChatOpenAI
 from langchain_community.utilities import SQLDatabase
 from typing_extensions import Annotated, TypedDict
@@ -89,10 +88,7 @@ def generate_answer(state: State):
     return {"answer": response.content}
 
 
-# Define the tool using the @tool decorator
-@tool("find_data_in_db")
 def find_data_in_db(question: str, history: list) -> str:
-    """Tool for searching the store's database. The database contains the following data about products: product article, product category, product sub-category, product name, available quantity in the store, and price per unit."""
     state = {"question": question, "history": history}
     state.update(write_query(state))
     state.update(execute_query(state))
