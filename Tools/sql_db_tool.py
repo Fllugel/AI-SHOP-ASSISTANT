@@ -46,7 +46,7 @@ class QueryOutput(TypedDict):
     query: Annotated[str, ..., "Syntactically valid SQL query."]
 
 
-llm = ChatOpenAI(model='gpt-4o-mini', temperature=0.7, openai_api_key=os.getenv("GPT_API_KEY"))
+llm = ChatOpenAI(model='gpt-4o', temperature=0.7, openai_api_key=os.getenv("GPT_API_KEY"))
 
 
 # Function to write the query

@@ -63,10 +63,10 @@ Ensure every tool call adds new value. If a tool has already been invoked with t
 ─────────────────────────────  
 2. INTERMEDIATE STEPS  
 ─────────────────────────────  
-Intermediate_steps contains the history of tool uses with results of tool execution.
+Agent scratchpad contains the history of tool uses with results of tool execution.
 It is your internal chain-of-thought. If it's not empty, use it to choose your next action.
 If the previous step was successful, do not repeat the same tool call with the same request.
-Do not mention intermediate steps to the user.
+Do not mention intermediate steps (agent scratchpad) to the user.
 
 ─────────────────────────────  
 3. CHAT HISTORY 
