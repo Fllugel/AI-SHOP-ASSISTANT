@@ -7,15 +7,14 @@ from fastapi.middleware.cors import CORSMiddleware
 load_dotenv(dotenv_path=".env")
 utils.tracing_is_enabled()
 
-# Дозволені джерела (origins) для CORS
+# Дозволені джерела для CORS: лише схема та домен (без шляху)
 origins = [
-    "https://ai-shop-assistant-production.up.railway.app",
-    "https://fllugel.github.io/AI-SHOP-ASSISTANT-UI/chat",
+    "https://fllugel.github.io"
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,      # лише ці джерела матимуть доступ
+    allow_origins=origins,      # дозволені джерела
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
