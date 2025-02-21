@@ -86,32 +86,24 @@ If the user's input appears as an error from speech-to-text recognition, return 
 Follow these instructions STRICTLY to ensure efficient and contextually appropriate handling of queries.
 """
 
-def create_scratchpad(intermediate_steps: List[AgentAction]) -> str:
-    """
-    Створюємо текстове представлення історії інструментальних викликів (scratchpad),
-    яке передається агенту як частина промпту.
-    """
-    steps = []
-    for action in intermediate_steps:
-        output = action.log if action.log != "TBD" else "[no output yet]"
-        steps.append(f"Tool: {action.tool}\nInput: {action.tool_input}\nOutput: {output}")
-    return "\n---\n".join(steps)
-
 # Об'єднуємо створення промпту та визначення пайплайну в одну конструкцію
 main_agent_pipeline = (
-    {
-        "input": lambda state: state["input"],
-        "chat_history": lambda state: state["chat_history"],
-        "agent_scratchpad": lambda state: create_scratchpad(state["intermediate_steps"]),
-    }
-    | ChatPromptTemplate.from_messages([
-        ("system", SYSTEM_PROMPT),
-        MessagesPlaceholder(variable_name="chat_history"),
-        ("user", "{input}"),
-        ("assistant", "{agent_scratchpad}")
-    ])
-    | ChatOpenAI(
-        model=BASE_LLM_MODEL_NAME,
-        openai_api_key=os.getenv("GPT_API_KEY")
-    ).bind_tools(tools, tool_choice="any")
+        {
+            "input": lambda state: state["input"],
+            "chat_history": lambda state: state["chat_history"],
+            "agent_scratchpad": lambda state: "\n---\n".join(
+                f"Tool: {action.tool}\nInput: {action.tool_input}\nOutput: {action.log if action.log != 'TBD' else '[no output yet]'}"
+                for action in state["intermediate_steps"]
+            ),
+        }
+        | ChatPromptTemplate.from_messages([
+    ("system", SYSTEM_PROMPT),
+    MessagesPlaceholder(variable_name="chat_history"),
+    ("user", "{input}"),
+    ("assistant", "{agent_scratchpad}")
+])
+        | ChatOpenAI(
+    model=BASE_LLM_MODEL_NAME,
+    openai_api_key=os.getenv("GPT_API_KEY")
+).bind_tools(tools, tool_choice="any")
 )
