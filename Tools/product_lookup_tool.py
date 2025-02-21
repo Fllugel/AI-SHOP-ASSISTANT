@@ -2,28 +2,41 @@ import sqlite3
 import json
 
 
-def lookup_product_by_id(product_id):
+def lookup_products_by_ids(product_ids):
     conn = sqlite3.connect('database.db')
     cursor = conn.cursor()
-    cursor.execute("SELECT ProductTitle, ProductURL, ProductImage FROM StockTable WHERE PRODUCT_ID = ?", (product_id,))
-    row = cursor.fetchone()
+    # Формуємо рядок з плейсхолдерами, рівний кількості ідентифікаторів
+    placeholders = ','.join('?' for _ in product_ids)
+    query = f"""
+        SELECT PRODUCT_ID, ProductTitle, ProductURL, ProductImage
+        FROM StockTable
+        WHERE PRODUCT_ID IN ({placeholders})
+    """
+    cursor.execute(query, product_ids)
+    rows = cursor.fetchall()
     conn.close()
 
-    if row:
-        row_index, website_link, image_link = row
-        response = {
-            "id": product_id,
-            "row_index": row_index,
-            "website_link": website_link,
-            "image_link": image_link
+    results = {}
+    # Записуємо знайдені товари у словник
+    for row in rows:
+        pid, title, url, image = row
+        results[pid] = {
+            "id": pid,
+            "row_index": title,
+            "website_link": url,
+            "image_link": image
         }
-    else:
-        response = {"error": "Товар не знайдено"}
+    # Для кожного ID, який не знайдено, додаємо повідомлення про помилку
+    for pid in product_ids:
+        if pid not in results:
+            results[pid] = {"error": "Товар не знайдено"}
 
-    return json.dumps(response, ensure_ascii=False, indent=2)
+    return json.dumps(results, ensure_ascii=False, indent=2)
 
 
 # Приклад використання:
 if __name__ == "__main__":
-    test_id = input("Введіть ID товару: ")
-    print(lookup_product_by_id(test_id))
+    input_ids = input("Введіть ID товарів через кому: ")
+    # Розділяємо вхідний рядок на список ID та обрізаємо зайві пробіли
+    id_list = [i.strip() for i in input_ids.split(",") if i.strip()]
+    print(lookup_products_by_ids(id_list))

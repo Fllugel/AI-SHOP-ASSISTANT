@@ -1,5 +1,7 @@
+from typing import List
+
 from langchain_core.tools import tool
-from Tools.product_lookup_tool import lookup_product_by_id
+from Tools.product_lookup_tool import lookup_products_by_ids
 from Tools.shop_info_tool import shop_info
 from Tools.holiday_info_tool import holiday_info
 from Tools.sql_db_tool import find_data_in_db
@@ -26,11 +28,13 @@ def holiday_info_tool(key: str) -> str:
 
 
 @tool("product_lookup_tool")
-def product_lookup_tool(key: str):
+def product_lookup_tool(product_ids: List[str]):
     """
-    This tool searches the "products" table in the 'database.db' SQLite database for a product with the specified product_id.
+    This tool searches the "StockTable" in the 'database.db' SQLite database for products with the specified product_ids.
+    It returns a JSON object mapping each product_id to its details, including the product title, website link, and image link.
+    If a product is not found, an error message is provided for that id.
     """
-    return lookup_product_by_id(key)
+    return lookup_products_by_ids(product_ids)
 
 
 @tool("shop_info_tool")
