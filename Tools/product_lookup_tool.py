@@ -3,14 +3,14 @@ import json
 
 
 def lookup_products_by_ids(product_ids):
-    conn = sqlite3.connect('database.db')
+    conn = sqlite3.connect('Data/database.db')
     cursor = conn.cursor()
     # Формуємо рядок з плейсхолдерами, рівний кількості ідентифікаторів
     placeholders = ','.join('?' for _ in product_ids)
     query = f"""
-        SELECT PRODUCT_ID, ProductTitle, ProductURL, ProductImage
+        SELECT ProductID, ProductTitle, ProductURL, ProductImage
         FROM StockTable
-        WHERE PRODUCT_ID IN ({placeholders})
+        WHERE ProductID IN ({placeholders})
     """
     cursor.execute(query, product_ids)
     rows = cursor.fetchall()
@@ -26,10 +26,10 @@ def lookup_products_by_ids(product_ids):
             "website_link": url,
             "image_link": image
         }
-    # Для кожного ID, який не знайдено, додаємо повідомлення про помилку
-    for pid in product_ids:
-        if pid not in results:
-            results[pid] = {"error": "Товар не знайдено"}
+    # # Для кожного ID, який не знайдено, додаємо повідомлення про помилку
+    # for pid in product_ids:
+    #     if pid not in results:
+    #         results[pid] = {"error": "Товар не знайдено"}
 
     return json.dumps(results, ensure_ascii=False, indent=2)
 

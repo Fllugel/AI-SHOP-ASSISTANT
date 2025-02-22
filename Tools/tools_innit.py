@@ -30,9 +30,7 @@ def holiday_info_tool(key: str) -> str:
 @tool("product_lookup_tool")
 def product_lookup_tool(product_ids: List[str]):
     """
-    This tool searches the "StockTable" in the 'database.db' SQLite database for products with the specified product_ids.
-    It returns a JSON object mapping each product_id to its details, including the product title, website link, and image link.
-    If a product is not found, an error message is provided for that id.
+    returns products by ProductID
     """
     return lookup_products_by_ids(product_ids)
 
@@ -47,7 +45,7 @@ def shop_info_tool() -> str:
 
 @tool("sql_db_tool")
 def sql_db_tool(question: str, history: list) -> str:
-    """Tool for searching the store's database. The database contains the following data about products: product article, product category, product sub-category, product name, available quantity in the store, and price per unit."""
+    """Tool for searching the store's database. The database contains the following data about products: ProductID, product article, product category, product sub-category, product name, available quantity in the store, and price per unit."""
     return find_data_in_db(question, history)
 
 
