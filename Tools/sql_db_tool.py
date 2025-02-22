@@ -64,8 +64,8 @@ def write_query(state: State):
     result = structured_llm.invoke(prompt)
 
     query = result["query"]
-    if "SELECT PRODUCT_ID" not in query.upper():
-        query = query.replace("SELECT", "SELECT product_id,", 1)
+    if "SELECT ProductID" not in query.upper():
+        query = query.replace("SELECT", "SELECT ProductID,", 1)
 
     return {"query": query}
 
