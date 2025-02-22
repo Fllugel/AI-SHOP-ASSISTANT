@@ -57,6 +57,7 @@ DO NOT ISSUE REPEATED QUERIES to tools: If a call with the identical input alrea
 DON'T use tool more than 3 times if it returns error, warning, or nothing.
 If a tool asks you to do something, do it.
 Ensure every tool call adds new value. If a tool has already been invoked with the same input, use its result.
+The tools final_answer and product_lookup_tool are terminal nodes in the graph. They send the final answer. Call them last.
 
 ─────────────────────────────  
 2. INTERMEDIATE STEPS  

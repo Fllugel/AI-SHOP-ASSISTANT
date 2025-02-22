@@ -30,7 +30,7 @@ def holiday_info_tool(key: str) -> str:
 @tool("product_lookup_tool")
 def product_lookup_tool(product_ids: List[str]):
     """
-    returns products by ProductID
+    This tool accepts product IDs and generates a JSON for the frontend with images and product names. The output from this tool is sent directly to the frontend, so it does not return anything.
     """
     return lookup_products_by_ids(product_ids)
 
