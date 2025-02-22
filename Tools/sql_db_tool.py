@@ -6,7 +6,8 @@ from langchain_community.utilities import SQLDatabase
 from typing_extensions import Annotated, TypedDict
 from langchain_community.tools.sql_database.tool import QuerySQLDatabaseTool
 
-from config import SQL_DB_TOOL_PRODUCT_DB_URI, SQL_DB_TOOL_LLM_MODEL_NAME, SQL_DB_TOOL_LLM_MODEL_TEMPERATURE, SQL_DB_TOOL_TOP_K, \
+from config import SQL_DB_TOOL_PRODUCT_DB_URI, SQL_DB_TOOL_LLM_MODEL_NAME, SQL_DB_TOOL_LLM_MODEL_TEMPERATURE, \
+    SQL_DB_TOOL_TOP_K, \
     SQL_DB_TOOL_MAX_ATTEMPTS
 
 load_dotenv()
@@ -24,7 +25,7 @@ If a client asks for a product recommendation without a detailed description, ch
 When searching for a specific product, and you do not find the product in the database, use multiple synonyms or rephrased versions of the product name in query. 
 ALWAYS make queries in noun infinitive form when searching for a specific product. 
 
-In SQL, DISTINCT must come directly after SELECT to apply to the entire row (or all listed columns).
+DISTINCT must come directly after SELECT as in example: "SELECT DISTINCT column1, column2, ... ";
 
 Only use the following tables:
 {table_info}
@@ -49,7 +50,8 @@ class QueryOutput(TypedDict):
     query: Annotated[str, ..., "Syntactically valid SQL query."]
 
 
-llm = ChatOpenAI(model=SQL_DB_TOOL_LLM_MODEL_NAME, temperature=SQL_DB_TOOL_LLM_MODEL_TEMPERATURE, openai_api_key=os.getenv("GPT_API_KEY"))
+llm = ChatOpenAI(model=SQL_DB_TOOL_LLM_MODEL_NAME, temperature=SQL_DB_TOOL_LLM_MODEL_TEMPERATURE,
+                 openai_api_key=os.getenv("GPT_API_KEY"))
 
 
 # Function to write the query
@@ -99,8 +101,9 @@ def rephrase_query(state: State) -> str:
         f"""The SQL query '{state['query']}' returned no results for the product search based on the question: '{state['question']}'. 
 Please provide an alternative syntactically correct SQL query using synonyms, 
 different phrasing of the product name, or try searching in english and in ukrainian.
-Ensure that the query uses the correct column names and limits the results to at most {SQL_DB_TOOL_TOP_K}."""
-    )
+Ensure that the query uses the correct column names and limits the results to at most {SQL_DB_TOOL_TOP_K}. 
+DISTINCT must come directly after SELECT.
+""")
     response = llm.invoke(synonyms_prompt)
     new_query = response.content.strip()
     if "SELECT PRODUCT_ID" not in new_query.upper():
@@ -109,22 +112,26 @@ Ensure that the query uses the correct column names and limits the results to at
 
 
 def find_data_in_db(question: str, history: list) -> str:
-    state = {"question": question, "history": history, "empty_queries": []}
-    state.update(write_query(state))
-    state.update(execute_query(state))
-
-    # Retry generating and executing alternative SQL queries until a non-empty result is obtained or the maximum attempts are reached.
-    attempt = 0
-    while (not state["result"] or state["result"] == "") and attempt < SQL_DB_TOOL_MAX_ATTEMPTS:
-        new_query = rephrase_query(state)
-        if new_query in state["empty_queries"]:
-            attempt += 1
-            continue
-        state["empty_queries"].append(new_query)
-        state["query"] = new_query
+    try:
+        state = {"question": question, "history": history, "empty_queries": []}
+        state.update(write_query(state))
         state.update(execute_query(state))
-        attempt += 1
 
-    # Optionally, generate an answer:
-    # state.update(generate_answer(state))
-    return state["result"]
+        # Retry generating and executing alternative SQL queries until a non-empty result is obtained or the maximum attempts are reached.
+        attempt = 0
+        while (not state["result"] or state["result"] == "") and attempt < SQL_DB_TOOL_MAX_ATTEMPTS:
+            new_query = rephrase_query(state)
+            if new_query in state["empty_queries"]:
+                attempt += 1
+                continue
+            state["empty_queries"].append(new_query)
+            state["query"] = new_query
+            state.update(execute_query(state))
+            attempt += 1
+
+        # Optionally, generate an answer:
+        # state.update(generate_answer(state))
+        return state["result"]
+    except Exception as e:
+        return f"An error occurred: {str(e)}"
+
