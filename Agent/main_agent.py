@@ -7,7 +7,7 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_openai import ChatOpenAI
 
 from Tools.tools_innit import tools
-from config import BASE_LLM_MODEL_NAME
+from config import BASE_LLM_MODEL_NAME, TEMPERATURE
 
 # Отримуємо поточну дату та час у форматі UTC
 current_datetime = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S %Z")
@@ -113,6 +113,6 @@ main_agent_pipeline = (
 ])
         | ChatOpenAI(
     model=BASE_LLM_MODEL_NAME,
-    openai_api_key=os.getenv("GPT_API_KEY")
+    openai_api_key=os.getenv("GPT_API_KEY"), temperature=TEMPERATURE
 ).bind_tools(tools, tool_choice="any")
 )
