@@ -25,6 +25,9 @@ def extract_final_answer(state: dict) -> str:
     for step in reversed(state.get("intermediate_steps", [])):
         if step.tool == "final_answer":
             return step.tool_input.get("answer", "No answer found")
+        elif step.tool == "product_lookup_tool":
+            return step.tool_input.get("answer", "No answer found")
+    print(reversed(state.get("intermediate_steps", [])))
     return "I don't have a response for that."
 
 

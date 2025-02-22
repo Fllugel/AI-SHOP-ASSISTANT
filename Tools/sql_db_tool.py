@@ -24,6 +24,7 @@ Perform search queries using variations such as the first letter capitalized, th
 If a client asks for a product recommendation without a detailed description, choose a random product from the database using RANDOM. 
 
 ALWAYS make queries in noun infinitive form when searching for a specific product. 
+Always Return ProductID
 
 Only use the following tables:
 {table_info}
@@ -46,7 +47,7 @@ class QueryOutput(TypedDict):
     query: Annotated[str, ..., "Syntactically valid SQL query."]
 
 
-llm = ChatOpenAI(model='gpt-4o', temperature=0.7, openai_api_key=os.getenv("GPT_API_KEY"))
+llm = ChatOpenAI(model='gpt-4o', temperature=0.3, openai_api_key=os.getenv("GPT_API_KEY"))
 
 
 # Function to write the query
@@ -94,3 +95,5 @@ def find_data_in_db(question: str, history: list) -> str:
     state.update(execute_query(state))
     # state.update(generate_answer(state))
     return state["result"]
+
+#TODO Додати повторні запити в бд
