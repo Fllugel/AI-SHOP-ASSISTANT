@@ -33,6 +33,7 @@ Question: {input}
 """)
 
 
+# Define the State object structure
 class State(TypedDict):
     question: str
     query: str
@@ -42,6 +43,7 @@ class State(TypedDict):
     empty_queries: list
 
 
+# Define the QueryOutput structure
 class QueryOutput(TypedDict):
     """Generated SQL query."""
     query: Annotated[str, ..., "Syntactically valid SQL query."]
@@ -50,6 +52,7 @@ class QueryOutput(TypedDict):
 llm = ChatOpenAI(model=SQL_DB_TOOL_LLM_MODEL_NAME, temperature=SQL_DB_TOOL_LLM_MODEL_TEMPERATURE, openai_api_key=os.getenv("GPT_API_KEY"))
 
 
+# Function to write the query
 def write_query(state: State):
     prompt = tool_prompt.invoke(
         {
@@ -62,17 +65,21 @@ def write_query(state: State):
     )
     structured_llm = llm.with_structured_output(QueryOutput)
     result = structured_llm.invoke(prompt)
+
     query = result["query"]
-    if "SELECT PRODUCT_ID" not in query.upper():
+    if "SELECT ProductID" not in query.upper():
         query = query.replace("SELECT", "SELECT ProductID,", 1)
+
     return {"query": query}
 
 
+# Function to execute the query
 def execute_query(state: State):
     execute_query_tool = QuerySQLDatabaseTool(db=db)
     return {"result": execute_query_tool.invoke(state["query"])}
 
 
+# Function to generate the answer
 def generate_answer(state: State):
     """Answer question using retrieved information as context."""
     prompt = (

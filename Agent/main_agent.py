@@ -7,7 +7,7 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_openai import ChatOpenAI
 
 from Tools.tools_innit import tools
-from config import BASE_LLM_MODEL_NAME
+from config import BASE_LLM_MODEL_NAME, TEMPERATURE
 
 # Отримуємо поточну дату та час у форматі UTC
 current_datetime = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S %Z")
@@ -28,7 +28,6 @@ Product name
 Price in UAH (грн)
 Quantity left (if the customer asks)
 If the product is out of stock, suggest alternatives from the same category.
-If the said product was not found in the database, search for its synonyms before giving the final answer.
 
 Recommendations
 If a customer asks for a recommendation:
@@ -46,7 +45,6 @@ For multiple product requests, use one combined SQL query to speed up the search
 
 Response Format
 
-Use full product names, no abbreviations.
 Don’t add extra details like size or weight unless asked.
 Only use plain text (no special symbols or formatting).
 Use correct punctuation (periods, commas, question marks, exclamation marks, spaces, numbers, and letters).
@@ -59,6 +57,7 @@ DO NOT ISSUE REPEATED QUERIES to tools: If a call with the identical input alrea
 DON'T use tool more than 3 times if it returns error, warning, or nothing.
 If a tool asks you to do something, do it.
 Ensure every tool call adds new value. If a tool has already been invoked with the same input, use its result.
+The tools final_answer and product_lookup_tool are terminal nodes in the graph. They send the final answer. Call them last.
 
 ─────────────────────────────  
 2. INTERMEDIATE STEPS  
@@ -115,6 +114,6 @@ main_agent_pipeline = (
 ])
         | ChatOpenAI(
     model=BASE_LLM_MODEL_NAME,
-    openai_api_key=os.getenv("GPT_API_KEY")
+    openai_api_key=os.getenv("GPT_API_KEY"), temperature=TEMPERATURE
 ).bind_tools(tools, tool_choice="any")
 )
