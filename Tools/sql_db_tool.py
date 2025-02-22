@@ -25,7 +25,7 @@ If a client asks for a product recommendation without a detailed description, ch
 When searching for a specific product, and you do not find the product in the database, use multiple synonyms or rephrased versions of the product name in query. 
 ALWAYS make queries in noun infinitive form when searching for a specific product. 
 
-DISTINCT must come directly after SELECT as in example: "SELECT DISTINCT column1, column2, ... ";
+DO NOT make any DML statements (INSERT, UPDATE, DELETE, DROP etc.) to the database. Dont use DISTINCT in the query.
 
 Only use the following tables:
 {table_info}
@@ -102,7 +102,6 @@ def rephrase_query(state: State) -> str:
 Please provide an alternative syntactically correct SQL query using synonyms, 
 different phrasing of the product name, or try searching in english and in ukrainian.
 Ensure that the query uses the correct column names and limits the results to at most {SQL_DB_TOOL_TOP_K}. 
-DISTINCT must come directly after SELECT.
 """)
     response = llm.invoke(synonyms_prompt)
     new_query = response.content.strip()
