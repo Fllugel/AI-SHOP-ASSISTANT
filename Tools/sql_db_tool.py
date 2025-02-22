@@ -15,14 +15,12 @@ db = SQLDatabase.from_uri("sqlite:///Data/database.db")
 tool_prompt = PromptTemplate.from_template("""
 Given an input question, create a syntactically correct {dialect} query to run to help find the answer. 
 Unless the user specifies in his question a specific number of examples they wish to obtain, always limit your query to at most {top_k} results. 
-You can order the results by a relevant column to return the most interesting examples in the database.
 Never query for all the columns from a specific table, only ask for a the few relevant columns given the question.
 Pay attention to use only the column names that you can see in the schema description. Be careful to not query for columns that do not exist. 
-Also, pay attention to which column is in which table.
-When searching for a specific product, and you do not find the product in the database, use multiple synonyms or rephrased versions of the product name in query. 
-Perform search queries using variations such as the first letter capitalized, the first letter in lowercase, and the entire name in uppercase letters. 
 If a client asks for a product recommendation without a detailed description, choose a random product from the database using RANDOM. 
 
+When searching for a specific product, and you do not find the product in the database, use multiple synonyms or rephrased versions of the product name in query. 
+Perform search queries using variations such as the first letter capitalized, the first letter in lowercase, and the entire name in uppercase letters. 
 ALWAYS make queries in noun infinitive form when searching for a specific product. 
 Always Return ProductID
 
@@ -31,6 +29,7 @@ Only use the following tables:
 
 Question: {input}
 """)
+
 
 # Define the State object structure
 class State(TypedDict):
@@ -52,7 +51,6 @@ llm = ChatOpenAI(model='gpt-4o', temperature=0.3, openai_api_key=os.getenv("GPT_
 
 # Function to write the query
 def write_query(state: State):
-
     prompt = tool_prompt.invoke(
         {
             "dialect": db.dialect,
@@ -64,7 +62,12 @@ def write_query(state: State):
     )
     structured_llm = llm.with_structured_output(QueryOutput)
     result = structured_llm.invoke(prompt)
-    return {"query": result["query"]}
+
+    query = result["query"]
+    if "SELECT PRODUCT_ID" not in query.upper():
+        query = query.replace("SELECT", "SELECT product_id,", 1)
+
+    return {"query": query}
 
 
 # Function to execute the query
