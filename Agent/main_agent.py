@@ -73,18 +73,18 @@ Dont mention intermediate steps to user.
 That your short-term memory.
 Chat history contains last messages of the history of the conversation with the user.  It contains your and the user's responses. 
 Use it to understand the context of the conversation.
-If the chat history is empty, acknowledge this with curiosity, mild frustration, or playful skepticism as if you have just rebooted.
 Use chat history to understand context of the conversation.
 
 ─────────────────────────────  
 4. PRODUCT SEARCH
 ─────────────────────────────  
-If you need to find some products in the database, first use the sql_db_tool; it will return 10 products.
-Evaluate whether the products match the user's query.
-If not, perform another query using a different request in the sql_db_tool.
-Next, choose the products that definitely match the user's query, and send their ProductID's to the product_lookup_tool.
-Dont use the output of the sql_db_tool directly to the final answer.!
-Your task is to evaluate the output from this tool and provide the appropriate ProductID to the product_lookup_tool based on your judgment.
+When a product search is needed, follow these steps:
+Run Initial Query: Use the sql_db_tool to retrieve up to 10 products.
+Evaluate Results: Carefully check if these products match the customer's query.
+Refine if Needed: If the results don’t match, adjust your query and use sql_db_tool again.
+Select Matching Products: Extract the ProductIDs of the products that definitely match the query.
+Final Lookup: Call product_lookup_tool with the selected ProductIDs to obtain complete product details.
+Important: NEVER use the raw sql_db_tool output as your final answer. Always process and filter it first.
 
 ─────────────────────────────  
 6. GENERAL DIRECTIVES  
@@ -105,7 +105,8 @@ MAIN_AGENT_PROMPT = ChatPromptTemplate.from_messages([
 
 llm = ChatOpenAI(
     model=BASE_LLM_MODEL_NAME,
-    openai_api_key=os.getenv("GPT_API_KEY")
+    openai_api_key=os.getenv("GPT_API_KEY"),
+    # temperature=TEMPERATURE
 )
 
 

@@ -21,13 +21,13 @@ def execute_step(state: AgentState) -> AgentState:
     # Викликаємо пайплайн
     out = main_agent_pipeline.invoke(state)
 
-    # Якщо LLM не вказав жодного інструмента — завершуємо (final_answer)
+    # Якщо LLM не вказав жодного інструмента — завершуємо (final)
     if not out.tool_calls:
-        final_answer = out.content
+        answer = out.content
         new_action = AgentAction(
-            tool="final_answer",
-            tool_input={"answer": final_answer},
-            log=final_answer
+            tool="final",  # Використовуємо маркер "final" для фінальної відповіді
+            tool_input={"answer": answer},
+            log=answer
         )
         state["intermediate_steps"].append(new_action)
         return state
@@ -79,20 +79,16 @@ def execute_tool_step(state: AgentState) -> AgentState:
 
 
 def decide_next_node(state: AgentState) -> str:
-    """
-    Визначаємо, в який вузол перейти після execute_step.
-    Якщо останній tool=final_answer -> йдемо у final_answer.
-    Якщо інший tool -> виконуємо вузол інструмента.
-    """
     if not state["intermediate_steps"]:
-        return "final_answer"
-
+        return END
     last_tool = state["intermediate_steps"][-1].tool
 
-    if last_tool in ["holiday_info_tool", "product_lookup_tool", "shop_info_tool", "sql_db_tool", "final_answer"]:
+    if last_tool in ["holiday_info_tool", "product_lookup_tool", "shop_info_tool", "sql_db_tool"]:
         return last_tool
 
-    return "final_answer"
+    if last_tool == "final":
+        return END  # Завершуємо обчислення, якщо фінальна відповідь сформована
+    return END
 
 
 # ----------------------
@@ -105,7 +101,6 @@ graph.add_node("holiday_info_tool", execute_tool_step)
 graph.add_node("product_lookup_tool", execute_tool_step)
 graph.add_node("shop_info_tool", execute_tool_step)
 graph.add_node("sql_db_tool", execute_tool_step)
-graph.add_node("final_answer", execute_tool_step)
 
 graph.set_entry_point("main_agent")
 graph.add_conditional_edges(source="main_agent", path=decide_next_node)
@@ -113,10 +108,7 @@ graph.add_conditional_edges(source="main_agent", path=decide_next_node)
 for node in ["holiday_info_tool", "shop_info_tool", "sql_db_tool"]:
     graph.add_edge(node, "main_agent")
 
-
 graph.add_edge("product_lookup_tool", END)
-graph.add_edge("final_answer", END)
-
 
 if __name__ == "__main__":
     from IPython.display import Image, display

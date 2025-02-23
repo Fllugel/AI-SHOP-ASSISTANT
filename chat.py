@@ -23,10 +23,9 @@ def extract_final_answer(state: dict) -> str:
     Пошук останньої відповіді final_answer або product_lookup_tool у intermediate_steps.
     """
     for step in reversed(state.get("intermediate_steps", [])):
-        if step.tool == "final_answer":
+        if step.tool == "final":
             return step.tool_input.get("answer", "No answer found")
         if step.tool == "product_lookup_tool":
-            # Припускаємо, що результат роботи product_lookup_tool зберігається в полі log
             return step.log or "No answer found"
     return "I don't have a response for that."
 
