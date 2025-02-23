@@ -13,7 +13,6 @@ from config import SQL_DB_TOOL_PRODUCT_DB_URI, SQL_DB_TOOL_LLM_MODEL_NAME, SQL_D
 load_dotenv()
 
 db = SQLDatabase.from_uri(SQL_DB_TOOL_PRODUCT_DB_URI)
-db.run("PRAGMA case_sensitive_like=OFF;")
 
 tool_prompt = PromptTemplate.from_template("""
 Given an input question, create a syntactically correct {dialect} query to run to help find the answer. 
@@ -24,9 +23,13 @@ Pay attention to use only the column names that you can see in the schema descri
 If a client asks for a product recommendation without a detailed description, choose a random product from the database using RANDOM. 
 When searching for a specific product, and you do not find the product in the database, use multiple synonyms or rephrased versions of the product name in query. 
 ALWAYS make queries in noun infinitive form when searching for a specific product. 
+Always search using lowercase, uppercase, and title case versions of the product name.
 
 DO NOT make any DML statements (INSERT, UPDATE, DELETE, DROP etc.) to the database. Dont use DISTINCT in the query.
 Provide only the raw SQL query as the output, without surrounding it with any formatting or code block markers (e.g., no triple backticks ```sql or ```).
+Dont return ProductURL and ProductImage when searching product.
+
+Dont use Category and SubCategory when searching for specific product name.
 
 Only use the following tables:
 {table_info}
