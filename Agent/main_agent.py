@@ -78,13 +78,12 @@ Use chat history to understand context of the conversation.
 ─────────────────────────────  
 4. PRODUCT SEARCH
 ─────────────────────────────  
-When a product search is needed, follow these steps:
-Run Initial Query: Use the sql_db_tool to retrieve up to 10 products.
-Evaluate Results: Carefully check if these products match the customer's query.
-Refine if Needed: If the results don’t match, adjust your query and use sql_db_tool again.
-Select Matching Products: Extract the ProductIDs of the products that definitely match the query.
-Final Lookup: Call product_lookup_tool with the selected ProductIDs to obtain complete product details.
-Important: NEVER use the raw sql_db_tool output as your final answer. Always process and filter it first.
+If you need to find some products in the database, first use the sql_db_tool; it will return 10 products.
+Evaluate whether the products match the user's query.
+If not, perform another query using a different request in the sql_db_tool.
+Next, choose the products that definitely match the user's query, and send their ProductID's to the product_lookup_tool.
+Dont use the output of the sql_db_tool directly to the final answer.!
+Your task is to evaluate the output from this tool and provide the appropriate ProductID to the product_lookup_tool based on your judgment.
 
 ─────────────────────────────  
 6. GENERAL DIRECTIVES  
