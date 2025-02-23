@@ -26,6 +26,7 @@ When searching for a specific product, and you do not find the product in the da
 ALWAYS make queries in noun infinitive form when searching for a specific product. 
 
 DO NOT make any DML statements (INSERT, UPDATE, DELETE, DROP etc.) to the database. Dont use DISTINCT in the query.
+Provide only the raw SQL query as the output, without surrounding it with any formatting or code block markers (e.g., no triple backticks ```sql or ```).
 
 Only use the following tables:
 {table_info}
@@ -97,13 +98,25 @@ def generate_answer(state: State):
 
 
 def rephrase_query(state: State) -> str:
-    synonyms_prompt = (
-        f"""The SQL query '{state['query']}' returned no results for the product search based on the question: '{state['question']}'. 
+    synonyms_prompt = (f"""
+The previous SQL query :
+"{state['query']}" 
+returned no results for the product search based on the question: '{state['question']}'. 
 Please provide an alternative syntactically correct SQL query using synonyms, 
 different phrasing of the product name, or try searching in english and in ukrainian.
-Ensure that the query uses the correct column names and limits the results to at most {SQL_DB_TOOL_TOP_K}. 
 """)
-    response = llm.invoke(synonyms_prompt)
+
+    prompt = tool_prompt.invoke(
+        {
+            "dialect": db.dialect,
+            "top_k": SQL_DB_TOOL_TOP_K,
+            "table_info": db.get_table_info(),
+            "input": synonyms_prompt,
+            "history": state["history"]
+        }
+    )
+
+    response = llm.invoke(prompt)
     new_query = response.content.strip()
     if "SELECT PRODUCT_ID" not in new_query.upper():
         new_query = new_query.replace("SELECT", "SELECT ProductID,", 1)
