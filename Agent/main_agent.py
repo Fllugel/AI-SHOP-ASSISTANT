@@ -140,5 +140,5 @@ main_agent_pipeline = (
     }
     # Промпт
     | MAIN_AGENT_PROMPT
-    | llm.bind_tools(tools, tool_choice="any")
+    | llm.bind_tools(tools, tool_choice="auto")
 )
