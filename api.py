@@ -24,7 +24,7 @@ class ClearHistoryRequest(BaseModel):
 @app.post("/chat")
 async def chat(request: ChatRequest, background_tasks: BackgroundTasks):
     response_message = run_user_query(request.user_id, request.input)
-    return {"response": response_message}
+    return response_message
 
 @app.post("/clear_history")
 async def clear_history(request: ClearHistoryRequest, background_tasks: BackgroundTasks):
