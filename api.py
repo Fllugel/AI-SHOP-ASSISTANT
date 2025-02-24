@@ -5,10 +5,15 @@ from chat import run_user_query, user_states
 
 app = FastAPI()
 
-# Enable CORS
+# Configure allowed origins – add your front-end domain(s) here.
+origins = [
+    "https://fllugel.github.io",  # Your front-end domain
+    # "http://localhost:3000",    # For local development, if needed
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "https://localhost:3000"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
