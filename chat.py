@@ -28,7 +28,7 @@ def extract_final_answer(state: dict) -> dict[str, Any] | dict[str, str | Any] |
         if step.tool == "final":
             return {"response": step.tool_input.get("answer", "No answer found")}
         if step.tool == "product_lookup_tool":
-            return {"response":'', "items": step.log or "No answer found"}
+            return {"response":' ', "items": step.log or "No answer found"}
     return "I don't have a response for that."
 
 
