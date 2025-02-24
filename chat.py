@@ -52,7 +52,7 @@ def run_user_query(user_id: str, user_input: str) -> str:
 
     # Оновлюємо історію чату користувача
     state["chat_history"].append(HumanMessage(content=user_input))
-    state["chat_history"].append(AIMessage(content=response))
+    state["chat_history"].append(AIMessage(content=response["response"]))
 
     # Очищаємо "input" та накопичені кроки для наступного запиту
     state["input"] = ""
