@@ -1,3 +1,5 @@
+from typing import Dict, Any
+
 from langchain_core.messages import HumanMessage, AIMessage
 from graph import graph
 
@@ -18,14 +20,17 @@ def get_user_state(user_id: str) -> dict:
     return user_states[user_id]
 
 
-def extract_final_answer(state: dict) -> str:
+def extract_final_answer(state: dict) -> dict[str, Any] | dict[str, str | Any] | str:
     """
-    Пошук останньої відповіді final_answer у intermediate_steps.
+    Пошук останньої відповіді final_answer або product_lookup_tool у intermediate_steps.
     """
     for step in reversed(state.get("intermediate_steps", [])):
-        if step.tool == "final_answer":
-            return step.tool_input.get("answer", "No answer found")
+        if step.tool == "final":
+            return {"response": step.tool_input.get("answer", "No answer found")}
+        if step.tool == "product_lookup_tool":
+            return {"response":'', "items": step.log or "No answer found"}
     return "I don't have a response for that."
+
 
 
 def run_user_query(user_id: str, user_input: str) -> str:
