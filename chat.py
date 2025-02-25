@@ -1,3 +1,4 @@
+import json
 from typing import Dict, Any
 
 from langchain_core.messages import HumanMessage, AIMessage
@@ -20,7 +21,7 @@ def get_user_state(user_id: str) -> dict:
     return user_states[user_id]
 
 
-def extract_final_answer(state: dict) -> dict[str, Any] | dict[str, str | Any] | str:
+def extract_final_answer(state: dict) -> dict[str, Any]:
     """
     Пошук останньої відповіді final_answer або product_lookup_tool у intermediate_steps.
     """
@@ -28,9 +29,14 @@ def extract_final_answer(state: dict) -> dict[str, Any] | dict[str, str | Any] |
         if step.tool == "final":
             return {"response": step.tool_input.get("answer", "No answer found")}
         if step.tool == "product_lookup_tool":
-            return {"response":' ', "items": step.log or "No answer found"}
-    return "I don't have a response for that."
+            items = step.log or "{}"  # Якщо step.log порожній, повертаємо порожній JSON
+            try:
+                items = json.loads(items)  # Розпарсити JSON
+            except json.JSONDecodeError:
+                items = "No answer found"  # Якщо розпарсити не вдалося
+            return {"response": "", "items": items}
 
+    return {"response": "I don't have a response for that."}
 
 
 def run_user_query(user_id: str, user_input: str) -> str:

@@ -7,8 +7,8 @@ app = FastAPI()
 
 # Configure allowed origins – add your front-end domain(s) here.
 origins = [
-    "https://fllugel.github.io",  # Your front-end domain
-    # "http://localhost:3000",    # For local development, if needed
+    "https://fllugel.github.io",
+    "http://localhost:3000",
 ]
 
 app.add_middleware(
