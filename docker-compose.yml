@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - GPT_API_KEY=${GPT_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-${GPT_API_KEY}}
+    volumes:
+      - ./Data:/app/Data
+    restart: unless-stopped
+

@@ -37,14 +37,22 @@ stored_hash = hash_data.get(yaml_key)
 rebuild_index = (stored_hash != current_yaml_hash)
 
 # Initialize embeddings.
-OPENAI_API_KEY = os.getenv("GPT_API_KEY")
+OPENAI_API_KEY = os.getenv("GPT_API_KEY") or os.getenv("OPENAI_API_KEY")
+if not OPENAI_API_KEY:
+    raise ValueError("GPT_API_KEY or OPENAI_API_KEY environment variable must be set")
+
 embeddings = OpenAIEmbeddings(openai_api_key=OPENAI_API_KEY)
 
 if not rebuild_index and os.path.exists(INDEX_DIR):
     # Load FAISS index from disk.
-    vectorstore = FAISS.load_local(INDEX_DIR, embeddings, allow_dangerous_deserialization=True)
-    print("Loaded FAISS index from disk.")
-else:
+    try:
+        vectorstore = FAISS.load_local(INDEX_DIR, embeddings, allow_dangerous_deserialization=True)
+        print("Loaded FAISS index from disk.")
+    except Exception as e:
+        print(f"Error loading index from disk: {e}. Rebuilding index...")
+        rebuild_index = True
+
+if rebuild_index or not os.path.exists(INDEX_DIR):
     # Load data from the YAML file.
     with open(DATA_FILE, 'r', encoding='utf-8') as file:
         shop_data = yaml.safe_load(file)
