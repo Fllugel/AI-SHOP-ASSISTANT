@@ -2,7 +2,7 @@ import os
 import yaml
 import hashlib
 from dotenv import load_dotenv
-from langchain.docstore.document import Document
+from langchain_core.documents import Document
 from langchain_community.vectorstores import FAISS
 from langchain_openai import OpenAIEmbeddings
 

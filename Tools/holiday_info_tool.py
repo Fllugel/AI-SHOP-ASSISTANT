@@ -3,7 +3,7 @@ import openai
 import yaml
 import hashlib
 from langchain_openai import OpenAIEmbeddings
-from langchain.docstore.document import Document
+from langchain_core.documents import Document
 from langchain_community.vectorstores import FAISS
 
 # Set your OpenAI API key.
