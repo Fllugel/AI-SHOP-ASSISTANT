@@ -70,15 +70,28 @@ if rebuild_index or not os.path.exists(INDEX_DIR):
         documents.append(doc)
 
     print("Creating FAISS index for shop information...")
-    vectorstore = FAISS.from_documents(documents, embeddings)
-    vectorstore.save_local(INDEX_DIR)
+    try:
+        vectorstore = FAISS.from_documents(documents, embeddings)
+        vectorstore.save_local(INDEX_DIR)
 
-    # Create the index directory if it doesn't exist, and update the hash in the YAML file.
-    os.makedirs(INDEX_DIR, exist_ok=True)
-    hash_data[yaml_key] = current_yaml_hash
-    with open(hash_yaml_path, 'w', encoding='utf-8') as f:
-        yaml.safe_dump(hash_data, f)
-    print("FAISS index created and saved.")
+        # Create the index directory if it doesn't exist, and update the hash in the YAML file.
+        os.makedirs(INDEX_DIR, exist_ok=True)
+        hash_data[yaml_key] = current_yaml_hash
+        with open(hash_yaml_path, 'w', encoding='utf-8') as f:
+            yaml.safe_dump(hash_data, f)
+        print("FAISS index created and saved.")
+    except Exception as e:
+        print(f"Error creating FAISS index (API key may be invalid): {e}")
+        # Try to load existing index even if it's outdated
+        if os.path.exists(INDEX_DIR):
+            try:
+                vectorstore = FAISS.load_local(INDEX_DIR, embeddings, allow_dangerous_deserialization=True)
+                print("Loaded existing FAISS index from disk (may be outdated).")
+            except Exception as load_error:
+                print(f"Failed to load existing index: {load_error}")
+                raise ValueError(f"Cannot create or load FAISS index. Please check your API key. Error: {e}")
+        else:
+            raise ValueError(f"Cannot create FAISS index and no existing index found. Please check your API key. Error: {e}")
 
 def shop_info() -> str:
     """
